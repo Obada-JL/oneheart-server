@@ -49,13 +49,18 @@ const createSupportProject = async (req, res) => {
     const projectData = {
       image: req.files.image[0].filename,
       title: req.body.title,
+      titleAr: req.body.titleAr,
       description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
       buttonLink: req.body.buttonLink,
       details: {
         image: req.files.detailsImage?.[0]?.filename,
         title: details.title,
+        titleAr: details.titleAr,
         description1: details.description1,
+        description1Ar: details.description1Ar,
         description2: details.description2,
+        description2Ar: details.description2Ar,
       },
     };
 
@@ -83,7 +88,9 @@ const updateSupportProject = async (req, res) => {
     // Prepare update data
     const updateData = {
       title: req.body.title || existingProject.title,
+      titleAr: req.body.titleAr || existingProject.titleAr,
       description: req.body.description || existingProject.description,
+      descriptionAr: req.body.descriptionAr || existingProject.descriptionAr,
       buttonLink: req.body.buttonLink || existingProject.buttonLink,
     };
 

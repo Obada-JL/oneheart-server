@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 
+const translatedContentSchema = {
+  en: { type: String, required: true },
+  ar: { type: String, required: true },
+};
+
 const aboutUsSchema = new mongoose.Schema(
   {
     aboutUs: {
-      description: {
-        type: String,
-        required: true,
-      },
+      description: translatedContentSchema,
       photos: {
         type: [String],
         required: true,
@@ -14,44 +16,20 @@ const aboutUsSchema = new mongoose.Schema(
       },
     },
     goal: {
-      description: {
-        type: String,
-        required: true,
-      },
-      photo: {
-        type: String,
-        required: true,
-      },
+      description: translatedContentSchema,
+      photo: { type: String, required: true },
     },
     vision: {
-      description: {
-        type: String,
-        required: true,
-      },
-      photo: {
-        type: String,
-        required: true,
-      },
+      description: translatedContentSchema,
+      photo: { type: String, required: true },
     },
     message: {
-      description: {
-        type: String,
-        required: true,
-      },
-      photo: {
-        type: String,
-        required: true,
-      },
+      description: translatedContentSchema,
+      photo: { type: String, required: true },
     },
     values: {
-      description: {
-        type: String,
-        required: true,
-      },
-      photo: {
-        type: String,
-        required: true,
-      },
+      description: translatedContentSchema,
+      photo: { type: String, required: true },
     },
   },
   { timestamps: true }

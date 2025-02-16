@@ -13,17 +13,18 @@ const getSponsorshipItems = async (req, res) => {
 // Add new sponsorship item
 const addSponsorshipItem = async (req, res) => {
   try {
-    // Create sponsorship data object
     const sponsorshipData = {
       title: req.body.title,
+      titleAr: req.body.titleAr,
       description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
       donationLink: req.body.donationLink,
       category: req.body.category,
+      categoryAr: req.body.categoryAr,
       total: req.body.total,
       remaining: req.body.remaining,
     };
 
-    // Add image if it exists - corrected file access
     if (req.file) {
       sponsorshipData.sponsorshipImage = req.file.filename;
     }
@@ -45,25 +46,32 @@ const addSponsorshipItem = async (req, res) => {
 // Update sponsorship item
 const updateSponsorshipItem = async (req, res) => {
   try {
+    const updateData = {
+      title: req.body.title,
+      titleAr: req.body.titleAr,
+      description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
+      donationLink: req.body.donationLink,
+      category: req.body.category,
+      categoryAr: req.body.categoryAr,
+      total: req.body.total,
+      remaining: req.body.remaining,
+    };
+
+    if (req.file) {
+      updateData.sponsorshipImage = req.file.filename;
+    }
+
     const updatedSponsorship = await Sponsorship.findByIdAndUpdate(
       req.params.id,
-      {
-        title: req.body.title,
-        description: req.body.description,
-        donationLink: req.body.donationsLink,
-        category: req.body.category,
-        total: req.body.total,
-        remaining: req.body.remaining,
-      },
+      updateData,
       { new: true }
     );
-    if (req.files && req.files["sponsorshipImage"]) {
-      updatedSponsorship.sponsorshipImage =
-        req.files["sponsorshipImage"][0].filename;
-    }
+
     if (!updatedSponsorship) {
       return res.status(404).json({ message: "Sponsorship item not found" });
     }
+
     res.status(200).json(updatedSponsorship);
   } catch (error) {
     res.status(400).json({ message: error.message });

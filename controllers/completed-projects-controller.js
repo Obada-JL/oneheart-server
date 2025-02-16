@@ -56,8 +56,19 @@ const createCompletedProject = async (req, res) => {
     const projectData = {
       image: req.file.filename,
       title: req.body.title,
+      titleAr: req.body.titleAr,
       category: req.body.category,
-      details: details,
+      categoryAr: req.body.categoryAr,
+      details: details.map((detail) => ({
+        fund: detail.fund,
+        fundAr: detail.fundAr,
+        location: detail.location,
+        locationAr: detail.locationAr,
+        duration: detail.duration,
+        durationAr: detail.durationAr,
+        Beneficiary: detail.Beneficiary,
+        BeneficiaryAr: detail.BeneficiaryAr,
+      })),
     };
 
     console.log("Creating project with data:", projectData);
@@ -86,7 +97,9 @@ const updateCompletedProject = async (req, res) => {
 
     const updateData = {
       title: req.body.title || existingProject.title,
+      titleAr: req.body.titleAr || existingProject.titleAr,
       category: req.body.category || existingProject.category,
+      categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };
 
     if (req.file) {

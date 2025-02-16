@@ -10,7 +10,15 @@ const supportCampaignSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    titleAr: {
+      type: String,
+      required: true,
+    },
     description: {
+      type: String,
+      required: true,
+    },
+    descriptionAr: {
       type: String,
       required: true,
     },
@@ -27,6 +35,10 @@ const supportCampaignSchema = new mongoose.Schema(
       required: true,
     },
     category: {
+      type: String,
+      required: true,
+    },
+    categoryAr: {
       type: String,
       required: true,
     },

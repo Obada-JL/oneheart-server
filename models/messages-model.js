@@ -1,20 +1,32 @@
 const mongoose = require("mongoose");
 
-const messagesSchema = new mongoose.Schema({
+const messageSchema = new mongoose.Schema({
   senderName: {
     type: String,
+    required: true,
   },
   senderEmail: {
     type: String,
+    required: true,
   },
   recievedMessage: {
     type: String,
+    required: true,
   },
-  timestamp: {
+  language: {
+    // Add this field
     type: String,
+    enum: ["en", "ar"],
+    default: "en",
   },
   isRead: {
     type: Boolean,
+    default: false,
+  },
+  timestamp: {
+    type: String,
+    required: true,
   },
 });
-module.exports = mongoose.model("messages", messagesSchema);
+
+module.exports = mongoose.model("Message", messageSchema);

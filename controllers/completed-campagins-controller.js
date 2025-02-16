@@ -40,8 +40,21 @@ const createCompletedCampaign = async (req, res) => {
     const campaignData = {
       image: req.file.filename,
       title: req.body.title,
+      titleAr: req.body.titleAr,
       category: req.body.category,
-      details: details,
+      categoryAr: req.body.categoryAr,
+      details: [
+        {
+          fund: req.body.fund,
+          fundAr: req.body.fundAr,
+          location: req.body.location,
+          locationAr: req.body.locationAr,
+          duration: req.body.duration,
+          durationAr: req.body.durationAr,
+          Beneficiary: req.body.Beneficiary,
+          BeneficiaryAr: req.body.BeneficiaryAr,
+        },
+      ],
     };
 
     const campaign = new CompletedCampaign(campaignData);
@@ -65,8 +78,10 @@ const updateCompletedCampaign = async (req, res) => {
     }
 
     const updateData = {
-      title: req.body.title || existingCampaign.title,
-      category: req.body.category || existingCampaign.category,
+      title: req.body.title,
+      titleAr: req.body.titleAr,
+      category: req.body.category,
+      categoryAr: req.body.category,
     };
 
     // Update image if new one is provided
@@ -74,12 +89,20 @@ const updateCompletedCampaign = async (req, res) => {
       updateData.image = req.file.filename;
     }
 
-    // Update details if provided
+    // Handle details update
     if (req.body.details) {
-      updateData.details =
-        typeof req.body.details === "string"
-          ? JSON.parse(req.body.details)
-          : req.body.details;
+      updateData.details = [
+        {
+          fund: req.body.fund,
+          fundAr: req.body.fundAr,
+          location: req.body.location,
+          locationAr: req.body.locationAr,
+          duration: req.body.duration,
+          durationAr: req.body.durationAr,
+          Beneficiary: req.body.Beneficiary,
+          BeneficiaryAr: req.body.BeneficiaryAr,
+        },
+      ];
     }
 
     const updatedCampaign = await CompletedCampaign.findByIdAndUpdate(

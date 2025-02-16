@@ -3,7 +3,10 @@ const Message = require("../models/messages-model");
 // Get all messages
 exports.getAllMessages = async (req, res) => {
   try {
-    const messages = await Message.find();
+    const { language } = req.query; // Allow filtering by language
+    const query = language ? { language } : {};
+
+    const messages = await Message.find(query);
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -51,6 +54,7 @@ exports.createMessage = async (req, res) => {
       senderName: req.body.senderName,
       senderEmail: req.body.senderEmail,
       recievedMessage: req.body.recievedMessage, // Use the spelling from the request
+      language: req.body.language || "en", // Default to English if not specified
       isRead: false,
       timestamp: TimeStamp,
     });
