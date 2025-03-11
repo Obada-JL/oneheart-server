@@ -14,6 +14,14 @@ const supportCampaignSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: false,
+    },
+    categoryAr: {
+      type: String,
+      required: false,
+    },
     description: {
       type: String,
       required: true,
@@ -24,31 +32,48 @@ const supportCampaignSchema = new mongoose.Schema(
     },
     total: {
       type: Number,
-      default: 0,
+      required: true,
+      default: 0
     },
     paid: {
       type: Number,
-      default: 0,
-    },
-    donateLink: {
-      type: String,
       required: true,
+      default: 0
     },
-    category: {
-      type: String,
-      required: true,
-    },
-    categoryAr: {
-      type: String,
-      required: true,
+    details: {
+      image: {
+        type: String,
+        required: false,
+      },
+      title: {
+        type: String,
+        required: false,
+      },
+      titleAr: {
+        type: String,
+        required: false,
+      },
+      description1: {
+        type: String,
+        required: false,
+      },
+      description1Ar: {
+        type: String,
+        required: false,
+      },
+      description2: {
+        type: String,
+        required: false,
+      },
+      description2Ar: {
+        type: String,
+        required: false,
+      },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-const SupportCampaign = mongoose.model(
-  "SupportCampaign",
-  supportCampaignSchema
-);
-
-module.exports = SupportCampaign;
+module.exports = mongoose.model("SupportCampaign", supportCampaignSchema);

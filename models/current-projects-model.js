@@ -22,7 +22,11 @@ const currentProjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    buttonLink: {
+    category: {
+      type: String,
+      required: true,
+    },
+    categoryAr: {
       type: String,
       required: true,
     },

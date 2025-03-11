@@ -1,35 +1,37 @@
 const mongoose = require("mongoose");
 
-const translatedContentSchema = {
-  en: { type: String, required: true },
-  ar: { type: String, required: true },
+// Optional translated content schema for all sections
+const optionalTranslatedContentSchema = {
+  en: { type: String, required: false, default: "" },
+  ar: { type: String, required: false, default: "" },
 };
 
 const aboutUsSchema = new mongoose.Schema(
   {
     aboutUs: {
-      description: translatedContentSchema,
+      description: optionalTranslatedContentSchema,
       photos: {
         type: [String],
-        required: true,
+        required: false,
+        default: [],
         validate: [arrayLimit, "About Us section can only have 2 photos"],
       },
     },
     goal: {
-      description: translatedContentSchema,
-      photo: { type: String, required: true },
+      description: optionalTranslatedContentSchema,
+      photo: { type: String, required: false, default: "" },
     },
     vision: {
-      description: translatedContentSchema,
-      photo: { type: String, required: true },
+      description: optionalTranslatedContentSchema,
+      photo: { type: String, required: false, default: "" },
     },
     message: {
-      description: translatedContentSchema,
-      photo: { type: String, required: true },
+      description: optionalTranslatedContentSchema,
+      photo: { type: String, required: false, default: "" },
     },
     values: {
-      description: translatedContentSchema,
-      photo: { type: String, required: true },
+      description: optionalTranslatedContentSchema,
+      photo: { type: String, required: false, default: "" },
     },
   },
   { timestamps: true }

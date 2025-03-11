@@ -5,12 +5,19 @@ const https = require("https");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
+const multer = require("multer");
 // const verifyToken = require("./verifyToken");
 const app = express();
 const url = process.env.MONGO_URL;
 
 // Create uploads directories if they don't exist
-const uploadDirs = ["uploads", "uploads/sponsorships", "uploads/sliderImages"];
+const uploadDirs = [
+  "uploads",
+  "uploads/sponsorships",
+  "uploads/sliderImages",
+  "./uploads/campaign-videos",
+  "./uploads/campaign-thumbnails",
+];
 uploadDirs.forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -68,7 +75,10 @@ const validateDocumentation = (req, res, next) => {
     return next();
   }
 
-  const requiredFields = ["title", "titleAr", "description", "descriptionAr"];
+  console.log("Global validation middleware - Request body:", req.body);
+
+  // Use bracket notation for field names to match frontend
+  const requiredFields = ["title[en]", "title[ar]", "description[en]", "description[ar]"];
   const missingFields = requiredFields.filter((field) => !req.body[field]);
 
   if (missingFields.length > 0) {
@@ -77,6 +87,7 @@ const validateDocumentation = (req, res, next) => {
       fields: missingFields,
     });
   }
+
   next();
 };
 
@@ -92,7 +103,7 @@ const supportProjectsRouter = require("./routes/support-projects");
 const currentProjectsRouter = require("./routes/current-projects");
 const completedProjectsRouter = require("./routes/completed-projects");
 const completedCampaginsRouter = require("./routes/completed-campaigns");
-const currentCampaginsRouter = require("./routes/current-campaigns");
+const currentCampaignsRouter = require("./routes/current-campaigns");
 const supportCampaginsRouter = require("./routes/support-campaigns");
 const photosRoutes = require("./routes/docs-photos-route");
 const videosRoutes = require("./routes/docs-videos-route");
@@ -101,7 +112,8 @@ const contentRouter = require("./routes/content");
 const authRoutes = require("./routes/auth-routes");
 const programRoutes = require("./routes/program-routes");
 const campaignVideoRoutes = require("./routes/campaign-video-routes");
-const authMiddleware = require("./middleware/auth-middleware");
+// const authMiddleware = require("./middleware/auth-middleware");
+const userRoutes = require("./routes/user-routes");
 
 app.use("/api/programs", programRoutes);
 app.use("/api/campaign-videos", campaignVideoRoutes);
@@ -115,19 +127,20 @@ app.use("/api/about-us", aboutUsRouter);
 app.use("/api/support-projects", supportProjectsRouter);
 app.use("/api/current-projects", currentProjectsRouter);
 app.use("/api/completed-projects", completedProjectsRouter);
-app.use("/api/completed-campagins", completedCampaginsRouter);
-app.use("/api/current-campagins", currentCampaginsRouter);
-app.use("/api/support-campagins", supportCampaginsRouter);
+app.use("/api/completed-campaigns", completedCampaginsRouter);
+app.use("/api/current-campaigns", currentCampaignsRouter);
+app.use("/api/support-campaigns", supportCampaginsRouter);
 app.use("/api/photos", photosRoutes);
 app.use("/api/videos", videosRoutes);
-app.use("/api/documentations", validateDocumentation, documentationRouter);
+app.use("/api/documentations", documentationRouter);
 app.use("/api/content", contentRouter);
+app.use("/api/users", userRoutes);
 
 // Auth routes (unprotected)
 app.use("/api/auth", authRoutes);
 
 // Protected routes
-app.use("/api/*", authMiddleware); // Protect all other API routes
+// app.use("/api/*", authMiddleware); // Protect all other API routes
 
 // Add root route handler
 app.get("/", (req, res) => {

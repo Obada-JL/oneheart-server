@@ -5,7 +5,15 @@ const campaignVideoSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  thumbnail: {
+    type: String,
+    required: true,
+  },
   title: {
+    type: String,
+    required: true,
+  },
+  titleAr: {
     type: String,
     required: true,
   },

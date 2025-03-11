@@ -19,10 +19,11 @@ const createCompletedProject = async (req, res) => {
     });
 
     // Validate required fields
-    if (!req.body.title || !req.body.category || !req.file) {
+    if (!req.body.title || !req.body.titleAr || !req.body.description || 
+        !req.body.descriptionAr || !req.body.category || !req.body.categoryAr || !req.file) {
       return res.status(400).json({
         message: "Missing required fields",
-        required: ["title", "category", "image"],
+        required: ["title", "titleAr", "description", "descriptionAr", "category", "categoryAr", "image"],
         received: req.body,
       });
     }
@@ -36,13 +37,17 @@ const createCompletedProject = async (req, res) => {
       if (
         !Array.isArray(details) ||
         !details[0]?.fund ||
+        !details[0]?.fundAr ||
         !details[0]?.location ||
+        !details[0]?.locationAr ||
         !details[0]?.duration ||
-        !details[0]?.Beneficiary
+        !details[0]?.durationAr ||
+        !details[0]?.Beneficiary ||
+        !details[0]?.BeneficiaryAr
       ) {
         return res.status(400).json({
           message: "Invalid details format",
-          required: ["fund", "location", "duration", "Beneficiary"],
+          required: ["fund", "fundAr", "location", "locationAr", "duration", "durationAr", "Beneficiary", "BeneficiaryAr"],
           received: details,
         });
       }
@@ -57,6 +62,8 @@ const createCompletedProject = async (req, res) => {
       image: req.file.filename,
       title: req.body.title,
       titleAr: req.body.titleAr,
+      description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
       details: details.map((detail) => ({
@@ -98,6 +105,8 @@ const updateCompletedProject = async (req, res) => {
     const updateData = {
       title: req.body.title || existingProject.title,
       titleAr: req.body.titleAr || existingProject.titleAr,
+      description: req.body.description || existingProject.description,
+      descriptionAr: req.body.descriptionAr || existingProject.descriptionAr,
       category: req.body.category || existingProject.category,
       categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };

@@ -14,6 +14,14 @@ const supportProjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: false,
+    },
+    categoryAr: {
+      type: String,
+      required: false,
+    },
     description: {
       type: String,
       required: true,
@@ -22,38 +30,44 @@ const supportProjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    buttonLink: {
-      type: String,
+    total: {
+      type: Number,
       required: true,
+      default: 0
+    },
+    paid: {
+      type: Number,
+      required: true,
+      default: 0
     },
     details: {
       image: {
         type: String,
-        required: true,
+        required: false,
       },
       title: {
         type: String,
-        required: true,
+        required: false,
       },
       titleAr: {
         type: String,
-        required: true,
+        required: false,
       },
       description1: {
         type: String,
-        required: true,
+        required: false,
       },
       description1Ar: {
         type: String,
-        required: true,
+        required: false,
       },
       description2: {
         type: String,
-        required: true,
+        required: false,
       },
       description2Ar: {
         type: String,
-        required: true,
+        required: false,
       },
     },
   },

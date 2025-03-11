@@ -6,11 +6,13 @@ const port = 3000;
 
 const programRoutes = require("./routes/program-routes");
 const campaignVideoRoutes = require("./routes/campaign-video-routes");
+const userRoutes = require("./routes/user-routes");
 
 // ...existing code...
 
 app.use("/api/programs", programRoutes);
 app.use("/api/campaign-videos", campaignVideoRoutes);
+app.use("/api/users", userRoutes);
 
 // ...existing code...
 

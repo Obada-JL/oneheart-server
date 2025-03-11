@@ -1,27 +1,25 @@
 const mongoose = require("mongoose");
 
 const documentationSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  titleAr: { type: String, required: true },
-  description: { type: String, required: true },
-  descriptionAr: { type: String, required: true },
+  title: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
+  description: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
   images: {
     type: [String],
     required: true,
-    validate: [
-      {
-        validator: function (array) {
-          return array.length <= 3;
-        },
-        message: "Images array cannot have more than 3 images",
+    validate: {
+      validator: function(v) {
+        return v.length > 0 && v.length <= 3;
       },
-    ],
+      message: 'Documentation must have between 1 and 3 images'
+    }
   },
-  detailsLink: { type: String, required: true },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model("Documentation", documentationSchema);

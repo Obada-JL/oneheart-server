@@ -31,6 +31,10 @@ const currentCampaignSchema = new mongoose.Schema(
       required: true,
     },
     details: {
+      image: {
+        type: String,
+        required: true,
+      },
       title: {
         type: String,
         required: true,

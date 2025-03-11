@@ -34,29 +34,21 @@ const upload = multer({ storage: storage });
 
 // Routes
 router.get("/", getAllAboutUs);
-router.post(
-  "/",
-  upload.fields([
-    { name: "aboutUsPhotos", maxCount: 2 },
-    { name: "goalPhoto", maxCount: 1 },
-    { name: "visionPhoto", maxCount: 1 },
-    { name: "messagePhoto", maxCount: 1 },
-    { name: "valuesPhoto", maxCount: 1 },
-  ]),
-  createAboutUs
-);
-router.put(
-  "/:id",
-  upload.fields([
-    { name: "aboutUsPhotos", maxCount: 2 },
-    { name: "goalPhoto", maxCount: 1 },
-    { name: "visionPhoto", maxCount: 1 },
-    { name: "messagePhoto", maxCount: 1 },
-    { name: "valuesPhoto", maxCount: 1 },
-  ]),
-  updateAboutUs
-);
-router.delete("/:id", deleteAboutUs);
+router.post("/", upload.fields([
+  { name: 'aboutUsPhotos', maxCount: 2 },
+  { name: 'goalPhoto', maxCount: 1 },
+  { name: 'visionPhoto', maxCount: 1 },
+  { name: 'messagePhoto', maxCount: 1 },
+  { name: 'valuesPhoto', maxCount: 1 }
+]), createAboutUs);
+router.put("/:id", upload.fields([
+  { name: 'aboutUsPhotos', maxCount: 2 },
+  { name: 'goalPhoto', maxCount: 1 },
+  { name: 'visionPhoto', maxCount: 1 },
+  { name: 'messagePhoto', maxCount: 1 },
+  { name: 'valuesPhoto', maxCount: 1 }
+]), updateAboutUs);
+router.delete("/", deleteAboutUs);
 
 // Section-specific routes
 router.get("/about", getAboutUsSection);

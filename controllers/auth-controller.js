@@ -24,15 +24,25 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" }
     );
 
+    // Convert ObjectId to string to ensure consistent format
+    const userId = user._id.toString();
+    
+    console.log("User authenticated:", {
+      id: userId,
+      username: user.username,
+      role: user.role
+    });
+
     res.json({
       token,
       user: {
-        id: user._id,
+        id: userId,
         username: user.username,
         role: user.role,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: error.message });
   }
 };

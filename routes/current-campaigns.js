@@ -28,10 +28,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Define file fields for upload
+const uploadFields = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'detailsImage', maxCount: 1 }
+]);
+
 // Routes
 router.get("/", getAllCurrentCampaigns);
-router.post("/", upload.single("image"), createCurrentCampaign);
-router.put("/:id", upload.single("image"), updateCurrentCampaign);
+router.post("/", uploadFields, createCurrentCampaign);
+router.put("/:id", uploadFields, updateCurrentCampaign);
 router.delete("/:id", deleteCurrentCampaign);
 
 module.exports = router;

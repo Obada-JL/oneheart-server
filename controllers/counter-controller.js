@@ -12,19 +12,22 @@ const getCounterItems = async (req, res) => {
 
 // Add new counter item
 const addCounterItem = async (req, res) => {
-  const counterImage = req.files["counterImage"]
-    ? req.files["counterImage"][0].filename
-    : null;
-  const newCounter = new Counter({
-    counterImage,
-    counterTitle: req.body.counterTitle,
-    counterNumber: req.body.counterNumber,
-  });
-
   try {
+    if (!req.files || !req.files["counterImage"]) {
+      return res.status(400).json({ message: "Counter image is required" });
+    }
+
+    const newCounter = new Counter({
+      counterImage: req.files["counterImage"][0].filename,
+      counterTitle: req.body.counterTitleEn,
+      counterTitleAr: req.body.counterTitleAr,
+      counterNumber: req.body.counterNumber,
+    });
+
     const savedCounter = await newCounter.save();
     res.status(201).json(savedCounter);
   } catch (error) {
+    console.error("Error adding counter:", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -32,22 +35,29 @@ const addCounterItem = async (req, res) => {
 // Update counter item
 const updateCounterItem = async (req, res) => {
   try {
+    const updateData = {
+      counterTitle: req.body.counterTitleEn,
+      counterTitleAr: req.body.counterTitleAr,
+      counterNumber: req.body.counterNumber,
+    };
+
+    if (req.files && req.files["counterImage"]) {
+      updateData.counterImage = req.files["counterImage"][0].filename;
+    }
+
     const updatedCounter = await Counter.findByIdAndUpdate(
       req.params.id,
-      {
-        counterTitle: req.body.counterTitle,
-        counterNumber: req.body.counterNumber,
-      },
+      updateData,
       { new: true }
     );
-    if (req.files && req.files["counterImage"]) {
-      updatedCounter.counterImage = req.files["counterImage"][0].filename;
-    }
+
     if (!updatedCounter) {
       return res.status(404).json({ message: "Counter item not found" });
     }
+
     res.status(200).json(updatedCounter);
   } catch (error) {
+    console.error("Error updating counter:", error);
     res.status(400).json({ message: error.message });
   }
 };

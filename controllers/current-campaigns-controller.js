@@ -3,7 +3,15 @@ const CurrentCampaign = require("../models/current-campagins-model");
 // Get all current campaigns
 const getAllCurrentCampaigns = async (req, res) => {
   try {
-    const campaigns = await CurrentCampaign.find();
+    const limit = parseInt(req.query.limit) || 0; // Get limit from query params
+    let query = CurrentCampaign.find();
+    
+    // Apply limit if provided
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const campaigns = await query.exec();
     res.status(200).json(campaigns);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -13,46 +21,59 @@ const getAllCurrentCampaigns = async (req, res) => {
 // Create new current campaign
 const createCurrentCampaign = async (req, res) => {
   try {
-    console.log("Received data:", { body: req.body, file: req.file });
-
     // Validate main required fields
-    if (
-      !req.body.title ||
-      !req.body.description ||
-      !req.body.category ||
-      !req.file
-    ) {
+    const requiredFields = {
+      title: "Title in English",
+      titleAr: "Title in Arabic", 
+      description: "Description in English",
+      descriptionAr: "Description in Arabic",
+      category: "Category in English",
+      categoryAr: "Category in Arabic"
+    };
+
+    const missingFields = [];
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!req.body[field]) {
+        missingFields.push(label);
+      }
+    });
+
+    if (!req.files?.image) {
+      missingFields.push("Campaign Image");
+    }
+
+    if (!req.files?.detailsImage) {
+      missingFields.push("Details Image");
+    }
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
         message: "Missing required fields",
-        required: ["title", "description", "category", "image"],
-        received: req.body,
+        missingFields
       });
     }
 
-    // Validate details
+    // Parse and validate details
     const details = req.body.details ? JSON.parse(req.body.details) : null;
-    if (!details?.title || !details?.description1 || !details?.description2) {
+    if (!details?.title || !details?.titleAr || !details?.description1 || 
+        !details?.description1Ar || !details?.description2 || !details?.description2Ar) {
       return res.status(400).json({
-        message: "Missing required details fields",
-        required: [
-          "details.title",
-          "details.description1",
-          "details.description2",
-        ],
-        received: details,
+        message: "Missing required details fields"
       });
     }
 
     const campaignData = {
-      image: req.file.filename,
+      image: req.files.image[0].filename,
       title: req.body.title,
+      titleAr: req.body.titleAr,
       description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
       category: req.body.category,
+      categoryAr: req.body.categoryAr,
       details: {
-        title: details.title,
-        description1: details.description1,
-        description2: details.description2,
-      },
+        ...details,
+        image: req.files.detailsImage[0].filename
+      }
     };
 
     const campaign = new CurrentCampaign(campaignData);
@@ -60,10 +81,7 @@ const createCurrentCampaign = async (req, res) => {
     res.status(201).json(savedCampaign);
   } catch (error) {
     console.error("Error creating campaign:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, file: req.file },
-    });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -77,20 +95,30 @@ const updateCurrentCampaign = async (req, res) => {
 
     const updateData = {
       title: req.body.title || existingCampaign.title,
+      titleAr: req.body.titleAr || existingCampaign.titleAr,
       description: req.body.description || existingCampaign.description,
+      descriptionAr: req.body.descriptionAr || existingCampaign.descriptionAr,
       category: req.body.category || existingCampaign.category,
-      details: {
-        title: req.body.detailsTitle || existingCampaign.details.title,
-        description1:
-          req.body.detailsDescription1 || existingCampaign.details.description1,
-        description2:
-          req.body.detailsDescription2 || existingCampaign.details.description2,
-      },
+      categoryAr: req.body.categoryAr || existingCampaign.categoryAr
     };
 
-    // Update image if new one is provided
-    if (req.file) {
-      updateData.image = req.file.filename;
+    // Update image if provided
+    if (req.files?.image) {
+      updateData.image = req.files.image[0].filename;
+    }
+
+    // Update details if provided
+    if (req.body.details) {
+      const details = JSON.parse(req.body.details);
+      updateData.details = {
+        ...existingCampaign.details,
+        ...details
+      };
+      
+      // Update details image if provided
+      if (req.files?.detailsImage) {
+        updateData.details.image = req.files.detailsImage[0].filename;
+      }
     }
 
     const updatedCampaign = await CurrentCampaign.findByIdAndUpdate(
@@ -102,10 +130,7 @@ const updateCurrentCampaign = async (req, res) => {
     res.status(200).json(updatedCampaign);
   } catch (error) {
     console.error("Update error:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, file: req.file },
-    });
+    res.status(400).json({ message: error.message });
   }
 };
 

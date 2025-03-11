@@ -41,6 +41,12 @@ const upload = multer({
   },
 });
 
+// Configure upload for multiple fields
+const uploadFields = upload.fields([
+  { name: 'sponsorshipImage', maxCount: 1 },
+  { name: 'detailsImage', maxCount: 1 }
+]);
+
 // Add error handling middleware
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
@@ -54,8 +60,8 @@ router.use((error, req, res, next) => {
 
 // Routes
 router.get("/", getSponsorshipItems);
-router.post("/", upload.single("sponsorshipImage"), addSponsorshipItem);
-router.put("/:id", upload.single("sponsorshipImage"), updateSponsorshipItem);
+router.post("/", uploadFields, addSponsorshipItem);
+router.put("/:id", uploadFields, updateSponsorshipItem);
 router.delete("/:id", deleteSponsorshipItem);
 
 module.exports = router;

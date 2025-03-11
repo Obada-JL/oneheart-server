@@ -1,40 +1,73 @@
 const express = require("express");
 const router = express.Router();
-const CampaignVideo = require("../models/campaign-video-model");
 const multer = require("multer");
 const path = require("path");
+const CampaignVideo = require("../models/campaign-video-model");
 
-// Configure multer for video upload
+// Configure multer storage
 const storage = multer.diskStorage({
-  destination: "./uploads/campaign-videos",
+  destination: function (req, file, cb) {
+    const dest =
+      file.fieldname === "thumbnail"
+        ? "./uploads/campaign-thumbnails"
+        : "./uploads/campaign-videos";
+    cb(null, dest);
+  },
   filename: function (req, file, cb) {
-    cb(null, `campaign-video-${Date.now()}${path.extname(file.originalname)}`);
+    const prefix = file.fieldname === "thumbnail" ? "thumbnail" : "video";
+    cb(null, `${prefix}-${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
+// Configure multer upload
 const upload = multer({
   storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 50, // 50MB file size limit
+  },
   fileFilter: function (req, file, cb) {
-    if (!file.originalname.match(/\.(mp4|webm|mov)$/)) {
-      return cb(new Error("Only video files are allowed!"));
+    if (file.fieldname === "thumbnail") {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(new Error("Only image files are allowed for thumbnails!"));
+      }
+    } else if (file.fieldname === "video") {
+      if (!file.originalname.match(/\.(mp4|webm|mov)$/)) {
+        return cb(new Error("Only video files are allowed!"));
+      }
     }
     cb(null, true);
   },
 });
 
-// Create new campaign video
-router.post("/", upload.single("video"), async (req, res) => {
-  try {
-    const campaignVideo = new CampaignVideo({
-      video: req.file.filename,
-      title: req.body.title,
-    });
-    await campaignVideo.save();
-    res.status(201).json(campaignVideo);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+// Create new campaign video route
+router.post(
+  "/",
+  upload.fields([
+    { name: "video", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      if (!req.files || !req.files["video"] || !req.files["thumbnail"]) {
+        return res
+          .status(400)
+          .json({ message: "Both video and thumbnail are required" });
+      }
+
+      const campaignVideo = new CampaignVideo({
+        video: req.files["video"][0].filename,
+        thumbnail: req.files["thumbnail"][0].filename,
+        title: req.body.title,
+        titleAr: req.body.titleAr,
+      });
+
+      const savedVideo = await campaignVideo.save();
+      res.status(201).json(savedVideo);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   }
-});
+);
 
 // Get all campaign videos
 router.get("/", async (req, res) => {

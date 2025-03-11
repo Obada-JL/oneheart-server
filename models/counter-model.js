@@ -6,9 +6,16 @@ const countersSchema = new mongoose.Schema({
   },
   counterTitle: {
     type: String,
+    required: true,
+  },
+  counterTitleAr: {
+    type: String,
+    required: true,
   },
   counterNumber: {
     type: String,
+    required: true,
   },
 });
+
 module.exports = mongoose.model("Counter", countersSchema);

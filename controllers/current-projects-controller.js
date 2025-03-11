@@ -47,7 +47,8 @@ const createCurrentProject = async (req, res) => {
       titleAr: req.body.titleAr,
       description: req.body.description,
       descriptionAr: req.body.descriptionAr,
-      buttonLink: req.body.buttonLink,
+      category: req.body.category,
+      categoryAr: req.body.categoryAr,
       details: {
         image: req.files.detailsImage[0].filename,
         title: details.title,
@@ -83,7 +84,8 @@ const updateCurrentProject = async (req, res) => {
       titleAr: req.body.titleAr || existingProject.titleAr,
       description: req.body.description || existingProject.description,
       descriptionAr: req.body.descriptionAr || existingProject.descriptionAr,
-      buttonLink: req.body.buttonLink || existingProject.buttonLink,
+      category: req.body.category || existingProject.category,
+      categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };
 
     // Update main image if provided

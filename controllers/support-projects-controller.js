@@ -1,12 +1,15 @@
 const SupportProject = require("../models/support-projects-model");
+const path = require("path");
+const fs = require("fs");
 
 // Get all support projects
 const getAllSupportProjects = async (req, res) => {
   try {
-    const projects = await SupportProject.find();
+    const projects = await SupportProject.find().sort({ createdAt: -1 });
     res.status(200).json(projects);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Failed to fetch projects", error: error.message });
   }
 };
 
@@ -20,115 +23,207 @@ const getSupportProjectById = async (req, res) => {
     }
     res.status(200).json(project);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching project:", error);
+    res.status(500).json({ message: "Failed to fetch project", error: error.message });
   }
 };
 
 // Create new support project
 const createSupportProject = async (req, res) => {
   try {
-    console.log("Files received:", req.files);
     console.log("Body received:", req.body);
+    console.log("Files received:", req.files);
 
-    // Check for required files
-    if (!req.files?.image?.[0]) {
+    // Check if image is provided
+    if (!req.files || !req.files.image) {
       return res.status(400).json({ message: "Main image is required" });
     }
 
     // Parse details if it's a string
-    let details;
-    try {
-      details =
-        typeof req.body.details === "string"
-          ? JSON.parse(req.body.details)
-          : req.body.details;
-    } catch (error) {
-      return res.status(400).json({ message: "Invalid details format" });
+    let details = {};
+    if (req.body.details) {
+      try {
+        details = typeof req.body.details === "string" ? JSON.parse(req.body.details) : req.body.details;
+      } catch (error) {
+        console.error("Error parsing details:", error);
+        return res.status(400).json({ message: "Invalid details format" });
+      }
     }
 
     const projectData = {
       image: req.files.image[0].filename,
       title: req.body.title,
       titleAr: req.body.titleAr,
+      category: req.body.category,
+      categoryAr: req.body.categoryAr,
       description: req.body.description,
       descriptionAr: req.body.descriptionAr,
-      buttonLink: req.body.buttonLink,
+      total: Number(req.body.total) || 0,
+      paid: Number(req.body.paid) || 0,
       details: {
         image: req.files.detailsImage?.[0]?.filename,
-        title: details.title,
-        titleAr: details.titleAr,
-        description1: details.description1,
-        description1Ar: details.description1Ar,
-        description2: details.description2,
-        description2Ar: details.description2Ar,
+        title: details.title || req.body.detailsTitle,
+        titleAr: details.titleAr || req.body.detailsTitleAr,
+        description1: details.description1 || req.body.detailsDescription1,
+        description1Ar: details.description1Ar || req.body.detailsDescription1Ar,
+        description2: details.description2 || req.body.detailsDescription2,
+        description2Ar: details.description2Ar || req.body.detailsDescription2Ar,
       },
     };
 
-    const project = new SupportProject(projectData);
-    const savedProject = await project.save();
-    res.status(201).json(savedProject);
-  } catch (error) {
-    console.error("Error creating project:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, files: req.files },
+    // Validate required fields
+    const requiredFields = [
+      { field: 'title', label: 'Title in English' },
+      { field: 'titleAr', label: 'Title in Arabic' },
+      { field: 'description', label: 'Description in English' },
+      { field: 'descriptionAr', label: 'Description in Arabic' },
+      { field: 'total', label: 'Required Amount' },
+      { field: 'paid', label: 'Paid Amount' },
+    ];
+
+    const missingFields = [];
+    requiredFields.forEach(({ field, label }) => {
+      if (projectData[field] === undefined || projectData[field] === null || 
+          (typeof projectData[field] === 'string' && projectData[field].trim() === '')) {
+        missingFields.push(label);
+      }
     });
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
+
+    const newProject = new SupportProject(projectData);
+    await newProject.save();
+
+    res.status(201).json({
+      message: "Support project created successfully",
+      project: newProject,
+    });
+  } catch (error) {
+    console.error("Error creating support project:", error);
+    res.status(500).json({ message: "Error creating support project" });
   }
 };
 
 // Update support project
 const updateSupportProject = async (req, res) => {
   try {
+    console.log("Update Body received:", req.body);
+    console.log("Update Files received:", req.files);
+
     const { id } = req.params;
+
+    // Check if project exists
     const existingProject = await SupportProject.findById(id);
     if (!existingProject) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "Support project not found" });
+    }
+
+    // Parse details if it's a string
+    let details = {};
+    if (req.body.details) {
+      try {
+        details = typeof req.body.details === "string" ? JSON.parse(req.body.details) : req.body.details;
+      } catch (error) {
+        console.error("Error parsing details:", error);
+        return res.status(400).json({ message: "Invalid details format" });
+      }
     }
 
     // Prepare update data
     const updateData = {
-      title: req.body.title || existingProject.title,
-      titleAr: req.body.titleAr || existingProject.titleAr,
-      description: req.body.description || existingProject.description,
-      descriptionAr: req.body.descriptionAr || existingProject.descriptionAr,
-      buttonLink: req.body.buttonLink || existingProject.buttonLink,
+      title: req.body.title,
+      titleAr: req.body.titleAr,
+      category: req.body.category,
+      categoryAr: req.body.categoryAr,
+      description: req.body.description,
+      descriptionAr: req.body.descriptionAr,
+      total: Number(req.body.total) || 0,
+      paid: Number(req.body.paid) || 0,
+      details: {
+        ...existingProject.details,
+        title: details.title || req.body.detailsTitle || existingProject.details.title,
+        titleAr: details.titleAr || req.body.detailsTitleAr || existingProject.details.titleAr,
+        description1: details.description1 || req.body.detailsDescription1 || existingProject.details.description1,
+        description1Ar: details.description1Ar || req.body.detailsDescription1Ar || existingProject.details.description1Ar,
+        description2: details.description2 || req.body.detailsDescription2 || existingProject.details.description2,
+        description2Ar: details.description2Ar || req.body.detailsDescription2Ar || existingProject.details.description2Ar,
+      },
     };
 
-    // Update main image if provided
-    if (req.files?.mainImage?.[0]) {
-      updateData.image = req.files.mainImage[0].filename;
+    // Update image if provided
+    if (req.files && req.files.image) {
+      updateData.image = req.files.image[0].filename;
+      
+      // Delete old image
+      if (existingProject.image) {
+        const oldImagePath = path.join(__dirname, '..', 'uploads', 'support-projects', existingProject.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    } else {
+      // Keep existing image
+      updateData.image = existingProject.image;
     }
 
-    // Handle details update
-    if (req.body.details) {
-      let details =
-        typeof req.body.details === "string"
-          ? JSON.parse(req.body.details)
-          : req.body.details;
-
-      // Update detail images if provided
-      const detailImages = req.files?.detailImages || [];
-      details = details.map((detail, index) => ({
-        ...detail,
-        image: detailImages[index]?.filename || detail.image,
-      }));
-
-      updateData.details = details;
+    // Update details image if provided
+    if (req.files && req.files.detailsImage) {
+      updateData.details.image = req.files.detailsImage[0].filename;
+      
+      // Delete old details image
+      if (existingProject.details && existingProject.details.image) {
+        const oldImagePath = path.join(__dirname, '..', 'uploads', 'support-projects', 'details', existingProject.details.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    } else if (existingProject.details && existingProject.details.image) {
+      // Keep existing details image
+      updateData.details.image = existingProject.details.image;
     }
 
+    // Validate required fields
+    const requiredFields = [
+      { field: 'title', label: 'Title in English' },
+      { field: 'titleAr', label: 'Title in Arabic' },
+      { field: 'description', label: 'Description in English' },
+      { field: 'descriptionAr', label: 'Description in Arabic' },
+      { field: 'total', label: 'Required Amount' },
+      { field: 'paid', label: 'Paid Amount' },
+    ];
+
+    const missingFields = [];
+    requiredFields.forEach(({ field, label }) => {
+      if (updateData[field] === undefined || updateData[field] === null || 
+          (typeof updateData[field] === 'string' && updateData[field].trim() === '')) {
+        missingFields.push(label);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
+
+    // Update project
     const updatedProject = await SupportProject.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     );
 
-    res.status(200).json(updatedProject);
-  } catch (error) {
-    console.error("Error updating project:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, files: req.files },
+    res.status(200).json({
+      message: "Support project updated successfully",
+      project: updatedProject,
     });
+  } catch (error) {
+    console.error("Error updating support project:", error);
+    res.status(500).json({ message: "Error updating support project" });
   }
 };
 
@@ -142,7 +237,8 @@ const deleteSupportProject = async (req, res) => {
     }
     res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error deleting project:", error);
+    res.status(500).json({ message: "Failed to delete project", error: error.message });
   }
 };
 

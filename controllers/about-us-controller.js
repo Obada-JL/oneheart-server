@@ -1,4 +1,6 @@
 const AboutUs = require("../models/about-us-model");
+const fs = require('fs');
+const path = require('path');
 
 // Get all about us entries
 const getAllAboutUs = async (req, res) => {
@@ -13,116 +15,236 @@ const getAllAboutUs = async (req, res) => {
 // Create new about us entry
 const createAboutUs = async (req, res) => {
   try {
-    const aboutUsData = {
+    // Parse the data from the form
+    let data = {};
+    try {
+      data = JSON.parse(req.body.data || '{}');
+      console.log("Parsed data:", data);
+      console.log("About Us description from form:", data.aboutUs?.description);
+    } catch (e) {
+      console.warn("Error parsing data:", e);
+    }
+    
+    // Create new AboutUs document with default empty values for all fields
+    const aboutUs = new AboutUs({
       aboutUs: {
-        description: req.body.aboutUsDescription,
-        photos: req.files?.aboutUsPhotos?.map((file) => file.filename) || [],
+        description: {
+          en: data.aboutUs?.description?.en || "",
+          ar: data.aboutUs?.description?.ar || ""
+        },
+        photos: [] // Will be updated with file paths
       },
       goal: {
-        description: req.body.goalDescription,
-        photo: req.files?.goalPhoto?.[0]?.filename,
+        description: {
+          en: data.goal?.description?.en || "",
+          ar: data.goal?.description?.ar || ""
+        },
+        photo: "" // Will be updated with file path
       },
       vision: {
-        description: req.body.visionDescription,
-        photo: req.files?.visionPhoto?.[0]?.filename,
+        description: {
+          en: data.vision?.description?.en || "",
+          ar: data.vision?.description?.ar || ""
+        },
+        photo: "" // Will be updated with file path
       },
       message: {
-        description: req.body.messageDescription,
-        photo: req.files?.messagePhoto?.[0]?.filename,
+        description: {
+          en: data.message?.description?.en || "",
+          ar: data.message?.description?.ar || ""
+        },
+        photo: "" // Will be updated with file path
       },
       values: {
-        description: req.body.valuesDescription,
-        photo: req.files?.valuesPhoto?.[0]?.filename,
-      },
-    };
+        description: {
+          en: data.values?.description?.en || "",
+          ar: data.values?.description?.ar || ""
+        },
+        photo: "" // Will be updated with file path
+      }
+    });
 
-    const newAboutUs = new AboutUs(aboutUsData);
-    const savedAboutUs = await newAboutUs.save();
+    // Handle photos
+    if (req.files) {
+      // Handle aboutUs photos
+      if (req.files['aboutUsPhotos']) {
+        aboutUs.aboutUs.photos = req.files['aboutUsPhotos'].map(file => file.filename);
+      }
+      
+      // Handle section photos
+      if (req.files['goalPhoto'] && req.files['goalPhoto'][0]) {
+        aboutUs.goal.photo = req.files['goalPhoto'][0].filename;
+      }
+      if (req.files['visionPhoto'] && req.files['visionPhoto'][0]) {
+        aboutUs.vision.photo = req.files['visionPhoto'][0].filename;
+      }
+      if (req.files['messagePhoto'] && req.files['messagePhoto'][0]) {
+        aboutUs.message.photo = req.files['messagePhoto'][0].filename;
+      }
+      if (req.files['valuesPhoto'] && req.files['valuesPhoto'][0]) {
+        aboutUs.values.photo = req.files['valuesPhoto'][0].filename;
+      }
+    }
+
+    console.log("About to save:", aboutUs);
+    const savedAboutUs = await aboutUs.save();
     res.status(201).json(savedAboutUs);
   } catch (error) {
-    console.error("Error creating about us:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, files: req.files },
-    });
+    console.warn("Error creating about us:", error);
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Update about us entry
 const updateAboutUs = async (req, res) => {
   try {
-    const { id } = req.params;
-    const existingAboutUs = await AboutUs.findById(id);
-
+    // Parse the data from the form
+    let data = {};
+    try {
+      data = JSON.parse(req.body.data || '{}');
+    } catch (e) {
+      console.warn("Error parsing data:", e);
+    }
+    
+    // Find existing about us entry
+    const existingAboutUs = await AboutUs.findOne();
     if (!existingAboutUs) {
       return res.status(404).json({ message: "About Us entry not found" });
     }
 
+    // Prepare update data with default empty values for aboutUs description
     const updateData = {
       aboutUs: {
-        description:
-          req.body.aboutUsDescription || existingAboutUs.aboutUs.description,
-        photos: req.files?.aboutUsPhotos
-          ? req.files.aboutUsPhotos.map((file) => file.filename)
-          : existingAboutUs.aboutUs.photos,
+        description: {
+          en: data.aboutUs?.description?.en || existingAboutUs.aboutUs?.description?.en || "",
+          ar: data.aboutUs?.description?.ar || existingAboutUs.aboutUs?.description?.ar || ""
+        },
+        photos: existingAboutUs.aboutUs?.photos || [] // Keep existing photos by default
       },
       goal: {
-        description:
-          req.body.goalDescription || existingAboutUs.goal.description,
-        photo:
-          req.files?.goalPhoto?.[0]?.filename || existingAboutUs.goal.photo,
+        description: {
+          en: data.goal?.description?.en || existingAboutUs.goal?.description?.en || "",
+          ar: data.goal?.description?.ar || existingAboutUs.goal?.description?.ar || ""
+        },
+        photo: existingAboutUs.goal?.photo || "" // Keep existing photo by default
       },
       vision: {
-        description:
-          req.body.visionDescription || existingAboutUs.vision.description,
-        photo:
-          req.files?.visionPhoto?.[0]?.filename || existingAboutUs.vision.photo,
+        description: {
+          en: data.vision?.description?.en || existingAboutUs.vision?.description?.en || "",
+          ar: data.vision?.description?.ar || existingAboutUs.vision?.description?.ar || ""
+        },
+        photo: existingAboutUs.vision?.photo || ""
       },
       message: {
-        description:
-          req.body.messageDescription || existingAboutUs.message.description,
-        photo:
-          req.files?.messagePhoto?.[0]?.filename ||
-          existingAboutUs.message.photo,
+        description: {
+          en: data.message?.description?.en || existingAboutUs.message?.description?.en || "",
+          ar: data.message?.description?.ar || existingAboutUs.message?.description?.ar || ""
+        },
+        photo: existingAboutUs.message?.photo || ""
       },
       values: {
-        description:
-          req.body.valuesDescription || existingAboutUs.values.description,
-        photo:
-          req.files?.valuesPhoto?.[0]?.filename || existingAboutUs.values.photo,
-      },
+        description: {
+          en: data.values?.description?.en || existingAboutUs.values?.description?.en || "",
+          ar: data.values?.description?.ar || existingAboutUs.values?.description?.ar || ""
+        },
+        photo: existingAboutUs.values?.photo || ""
+      }
     };
 
-    const updatedAboutUs = await AboutUs.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    // Update photos if new ones are uploaded
+    if (req.files) {
+      if (req.files['aboutUsPhotos']) {
+        updateData.aboutUs.photos = req.files['aboutUsPhotos'].map(file => file.filename);
+      }
+      if (req.files['goalPhoto'] && req.files['goalPhoto'][0]) {
+        updateData.goal.photo = req.files['goalPhoto'][0].filename;
+      }
+      if (req.files['visionPhoto'] && req.files['visionPhoto'][0]) {
+        updateData.vision.photo = req.files['visionPhoto'][0].filename;
+      }
+      if (req.files['messagePhoto'] && req.files['messagePhoto'][0]) {
+        updateData.message.photo = req.files['messagePhoto'][0].filename;
+      }
+      if (req.files['valuesPhoto'] && req.files['valuesPhoto'][0]) {
+        updateData.values.photo = req.files['valuesPhoto'][0].filename;
+      }
+    }
+
+    console.log("Update data:", updateData);
+
+    // Update the document
+    const updatedAboutUs = await AboutUs.findByIdAndUpdate(
+      existingAboutUs._id,
+      updateData,
+      { new: true }
+    );
+
     res.status(200).json(updatedAboutUs);
   } catch (error) {
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, files: req.files },
-    });
+    console.error("Error updating about us:", error);
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Delete about us entry
 const deleteAboutUs = async (req, res) => {
   try {
-    const { id } = req.params;
-    const deletedAboutUs = await AboutUs.findByIdAndDelete(id);
-    if (!deletedAboutUs) {
+    // For about section, we'll delete the first (and only) document
+    const aboutUs = await AboutUs.findOne();
+    if (!aboutUs) {
       return res.status(404).json({ message: "About Us entry not found" });
     }
+
+    console.log("Deleting About Us with ID:", aboutUs._id);
+
+    // Delete associated files
+    if (aboutUs.aboutUs?.photos?.length > 0) {
+      for (const photo of aboutUs.aboutUs.photos) {
+        try {
+          const photoPath = path.join('uploads/aboutUs', photo);
+          console.log("Deleting photo:", photoPath);
+          await fs.unlink(photoPath);
+        } catch (err) {
+          console.error('Error deleting photo:', err);
+          // Continue with deletion even if file removal fails
+        }
+      }
+    }
+
+    // Delete section photos
+    const sections = ['goal', 'vision', 'message', 'values'];
+    for (const section of sections) {
+      if (aboutUs[section]?.photo) {
+        try {
+          const photoPath = path.join('uploads/aboutUs', aboutUs[section].photo);
+          console.log("Deleting section photo:", photoPath);
+          await fs.unlink(photoPath);
+        } catch (err) {
+          console.error(`Error deleting ${section} photo:`, err);
+          // Continue with deletion even if file removal fails
+        }
+      }
+    }
+
+    // Delete the document
+    const result = await AboutUs.deleteOne({ _id: aboutUs._id });
+    console.log("Delete result:", result);
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "About Us entry not found or already deleted" });
+    }
+    
     res.status(200).json({ message: "About Us entry deleted successfully" });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error in deleteAboutUs:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Get about us section
 const getAboutUsSection = async (req, res) => {
   try {
-    const aboutUs = await AboutUs.findOne({}, "aboutUs");
+    const aboutUs = await AboutUs.findOne();
     if (!aboutUs) {
       return res.status(404).json({ message: "About Us section not found" });
     }

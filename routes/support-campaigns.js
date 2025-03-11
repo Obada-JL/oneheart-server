@@ -6,6 +6,7 @@ const path = require("path");
 
 const {
   getAllSupportCampaigns,
+  getSupportCampaignById,
   createSupportCampaign,
   updateSupportCampaign,
   deleteSupportCampaign,
@@ -28,10 +29,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Define file fields for upload
+const uploadFields = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'detailsImage', maxCount: 1 }
+]);
+
 // Routes
 router.get("/", getAllSupportCampaigns);
-router.post("/", upload.single("image"), createSupportCampaign);
-router.put("/:id", upload.single("image"), updateSupportCampaign);
+router.get("/:id", getSupportCampaignById);
+router.post("/", uploadFields, createSupportCampaign);
+router.put("/:id", uploadFields, updateSupportCampaign);
 router.delete("/:id", deleteSupportCampaign);
 
 module.exports = router;

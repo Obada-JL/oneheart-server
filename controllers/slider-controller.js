@@ -12,21 +12,25 @@ const getSliderItems = async (req, res) => {
 
 // Add new slider item
 const addSliderItem = async (req, res) => {
-  const sliderImage = req.files["sliderImage"]
-    ? req.files["sliderImage"][0].filename
-    : null;
-  const newSlider = new Slider({
-    sliderImage,
-    sliderTitle: req.body.sliderTitle,
-    sliderDescription: req.body.sliderDescription,
-    donationsLink: req.body.donationsLink,
-    detailsLink: req.body.detailsLink,
-  });
-
   try {
+    if (!req.files || !req.files["sliderImage"]) {
+      return res.status(400).json({ message: "Slider image is required" });
+    }
+
+    const newSlider = new Slider({
+      sliderImage: req.files["sliderImage"][0].filename,
+      sliderTitle: req.body.sliderTitleEn,
+      sliderTitleAr: req.body.sliderTitleAr,
+      sliderDescription: req.body.sliderDescriptionEn,
+      sliderDescriptionAr: req.body.sliderDescriptionAr,
+      donationsLink: req.body.donationsLink,
+      detailsLink: req.body.detailsLink,
+    });
+
     const savedSlider = await newSlider.save();
     res.status(201).json(savedSlider);
   } catch (error) {
+    console.error("Error adding slider:", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -34,24 +38,32 @@ const addSliderItem = async (req, res) => {
 // Update slider item
 const updateSliderItem = async (req, res) => {
   try {
+    const updateData = {
+      sliderTitle: req.body.sliderTitleEn,
+      sliderTitleAr: req.body.sliderTitleAr,
+      sliderDescription: req.body.sliderDescriptionEn,
+      sliderDescriptionAr: req.body.sliderDescriptionAr,
+      donationsLink: req.body.donationsLink,
+      detailsLink: req.body.detailsLink,
+    };
+
+    if (req.files && req.files["sliderImage"]) {
+      updateData.sliderImage = req.files["sliderImage"][0].filename;
+    }
+
     const updatedSlider = await Slider.findByIdAndUpdate(
       req.params.id,
-      {
-        sliderTitle: req.body.sliderTitle,
-        sliderDescription: req.body.sliderDescription,
-        donationsLink: req.body.donationsLink,
-        detailsLink: req.body.detailsLink,
-      },
+      updateData,
       { new: true }
     );
-    if (req.files && req.files["sliderImage"]) {
-      updatedSlider.sliderImage = req.files["sliderImage"][0].filename;
-    }
+
     if (!updatedSlider) {
       return res.status(404).json({ message: "Slider item not found" });
     }
+
     res.status(200).json(updatedSlider);
   } catch (error) {
+    console.error("Error updating slider:", error);
     res.status(400).json({ message: error.message });
   }
 };
