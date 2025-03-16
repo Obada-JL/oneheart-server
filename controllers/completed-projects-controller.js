@@ -19,11 +19,10 @@ const createCompletedProject = async (req, res) => {
     });
 
     // Validate required fields
-    if (!req.body.title || !req.body.titleAr || !req.body.description || 
-        !req.body.descriptionAr || !req.body.category || !req.body.categoryAr || !req.file) {
+    if (!req.body.title || !req.body.titleAr || !req.body.category || !req.body.categoryAr || !req.file) {
       return res.status(400).json({
         message: "Missing required fields",
-        required: ["title", "titleAr", "description", "descriptionAr", "category", "categoryAr", "image"],
+        required: ["title", "titleAr", "category", "categoryAr", "image"],
         received: req.body,
       });
     }
@@ -62,8 +61,6 @@ const createCompletedProject = async (req, res) => {
       image: req.file.filename,
       title: req.body.title,
       titleAr: req.body.titleAr,
-      description: req.body.description,
-      descriptionAr: req.body.descriptionAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
       details: details.map((detail) => ({
@@ -105,8 +102,6 @@ const updateCompletedProject = async (req, res) => {
     const updateData = {
       title: req.body.title || existingProject.title,
       titleAr: req.body.titleAr || existingProject.titleAr,
-      description: req.body.description || existingProject.description,
-      descriptionAr: req.body.descriptionAr || existingProject.descriptionAr,
       category: req.body.category || existingProject.category,
       categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };

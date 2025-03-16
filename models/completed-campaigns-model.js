@@ -14,14 +14,6 @@ const completedCampaignSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-      required: true,
-    },
-    descriptionAr: {
-      type: String,
-      required: true,
-    },
     category: {
       type: String,
       required: true,

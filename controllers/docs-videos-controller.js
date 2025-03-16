@@ -1,4 +1,4 @@
-const Video = require("../models/Video");
+const Video = require("../models/docs-videos-model");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -26,17 +26,33 @@ exports.createVideos = async (req, res) => {
       return res.status(400).json({ message: "No videos uploaded" });
     }
 
-    const { docId } = req.body;
+    const { docId, titleEn, titleAr, descriptionEn, descriptionAr } = req.body;
     if (!docId) {
       return res.status(400).json({ message: "Documentation ID is required" });
     }
 
-    const videoData = req.files.map((file) => ({
-      video: file.filename,
-      docId,
-    }));
+    const savedVideos = [];
 
-    const savedVideos = await Video.insertMany(videoData);
+    for (const file of req.files) {
+      const videoData = {
+        video: file.filename,
+        docId,
+        title: {
+          en: titleEn || '',
+          ar: titleAr || ''
+        },
+        description: {
+          en: descriptionEn || '',
+          ar: descriptionAr || ''
+        },
+        videoUrl: `http://localhost:3500/uploads/documentation/${file.filename}`
+      };
+
+      const newVideo = new Video(videoData);
+      const savedVideo = await newVideo.save();
+      savedVideos.push(savedVideo);
+    }
+
     res.status(201).json(savedVideos);
   } catch (error) {
     res.status(400).json({ message: error.message });

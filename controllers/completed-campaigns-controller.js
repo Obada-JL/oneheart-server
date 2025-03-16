@@ -40,11 +40,10 @@ const createCompletedCampaign = async (req, res) => {
     }
 
     // Validate required fields
-    if (!req.body.title || !req.body.titleAr || !req.body.description || 
-        !req.body.descriptionAr || !req.body.category || !req.body.categoryAr || !req.files.image) {
+    if (!req.body.title || !req.body.titleAr || !req.body.category || !req.body.categoryAr || !req.files.image) {
       return res.status(400).json({
         message: "Missing required fields",
-        required: ["title", "titleAr", "description", "descriptionAr", "category", "categoryAr", "image"],
+        required: ["title", "titleAr", "category", "categoryAr", "image"],
         received: req.body,
       });
     }
@@ -89,8 +88,6 @@ const createCompletedCampaign = async (req, res) => {
       image: req.files.image[0].filename,
       title: req.body.title,
       titleAr: req.body.titleAr,
-      description: req.body.description,
-      descriptionAr: req.body.descriptionAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
       details: details.map(detail => ({
@@ -136,8 +133,6 @@ const updateCompletedCampaign = async (req, res) => {
     const updateData = {
       title: req.body.title || existingCampaign.title,
       titleAr: req.body.titleAr || existingCampaign.titleAr,
-      description: req.body.description || existingCampaign.description,
-      descriptionAr: req.body.descriptionAr || existingCampaign.descriptionAr,
       category: req.body.category || existingCampaign.category,
       categoryAr: req.body.categoryAr || existingCampaign.categoryAr,
     };
@@ -200,8 +195,19 @@ const deleteCompletedCampaign = async (req, res) => {
     if (!deletedCampaign) {
       return res.status(404).json({ message: "Campaign not found" });
     }
+    
+    // Delete campaign image if it exists
+    if (deletedCampaign.image) {
+      const imagePath = path.join(__dirname, '../uploads/completed-campaigns', deletedCampaign.image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log("Deleted image on campaign deletion:", imagePath);
+      }
+    }
+    
     res.status(200).json({ message: "Campaign deleted successfully" });
   } catch (error) {
+    console.error("Error deleting campaign:", error);
     res.status(500).json({ message: error.message });
   }
 };

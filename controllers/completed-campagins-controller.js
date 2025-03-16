@@ -62,36 +62,47 @@ const createCompletedCampaign = async (req, res) => {
     res.status(201).json(savedCampaign);
   } catch (error) {
     console.error("Error creating campaign:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, file: req.file },
-    });
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Update completed campaign
 const updateCompletedCampaign = async (req, res) => {
   try {
-    const existingCampaign = await CompletedCampaign.findById(req.params.id);
-    if (!existingCampaign) {
-      return res.status(404).json({ message: "Campaign not found" });
+    const campaign = await CompletedCampaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ message: "Completed campaign not found" });
     }
 
-    const updateData = {
-      title: req.body.title,
-      titleAr: req.body.titleAr,
-      category: req.body.category,
-      categoryAr: req.body.category,
-    };
+    // Update campaign fields
+    campaign.title = req.body.title || campaign.title;
+    campaign.titleAr = req.body.titleAr || campaign.titleAr;
+    campaign.category = req.body.category || campaign.category;
+    campaign.categoryAr = req.body.categoryAr || campaign.categoryAr;
 
-    // Update image if new one is provided
+    // Update image if provided
     if (req.file) {
-      updateData.image = req.file.filename;
+      campaign.image = req.file.filename;
     }
 
-    // Handle details update
+    // Update details if provided
     if (req.body.details) {
-      updateData.details = [
+      let details = req.body.details;
+      if (typeof details === "string") {
+        details = JSON.parse(details);
+      }
+      campaign.details = details;
+    } else if (
+      req.body.fund &&
+      req.body.fundAr &&
+      req.body.location &&
+      req.body.locationAr &&
+      req.body.duration &&
+      req.body.durationAr &&
+      req.body.Beneficiary &&
+      req.body.BeneficiaryAr
+    ) {
+      campaign.details = [
         {
           fund: req.body.fund,
           fundAr: req.body.fundAr,
@@ -105,33 +116,26 @@ const updateCompletedCampaign = async (req, res) => {
       ];
     }
 
-    const updatedCampaign = await CompletedCampaign.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
-
+    const updatedCampaign = await campaign.save();
     res.status(200).json(updatedCampaign);
   } catch (error) {
-    console.error("Update error:", error);
-    res.status(400).json({
-      message: error.message,
-      receivedData: { body: req.body, file: req.file },
-    });
+    console.error("Error updating campaign:", error);
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Delete completed campaign
 const deleteCompletedCampaign = async (req, res) => {
   try {
-    const deletedCampaign = await CompletedCampaign.findByIdAndDelete(
-      req.params.id
-    );
-    if (!deletedCampaign) {
-      return res.status(404).json({ message: "Campaign not found" });
+    const campaign = await CompletedCampaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ message: "Completed campaign not found" });
     }
-    res.status(200).json({ message: "Campaign deleted successfully" });
+
+    await CompletedCampaign.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Completed campaign deleted successfully" });
   } catch (error) {
+    console.error("Error deleting campaign:", error);
     res.status(500).json({ message: error.message });
   }
 };

@@ -4,13 +4,15 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+// Ensure upload directory exists
+const uploadDir = "uploads/documentation";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = "uploads/documentation";
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -37,9 +39,10 @@ const {
   deleteVideo,
 } = require("../controllers/docs-videos-controller");
 
+// Routes
 router.get("/", getAllVideos);
 router.get("/:docId", getVideosByDocId);
-router.post("/", upload.array("videos"), createVideos);
+router.post("/", upload.array("videos", 10), createVideos); // Allow up to 10 videos at once
 router.delete("/:id", deleteVideo);
 
 module.exports = router;
