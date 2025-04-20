@@ -6,7 +6,7 @@ const path = require("path");
 
 const {
   getAllSupportCampaigns,
-  getSupportCampaignById,
+  getSupportCampaign,
   createSupportCampaign,
   updateSupportCampaign,
   deleteSupportCampaign,
@@ -37,7 +37,7 @@ const uploadFields = upload.fields([
 
 // Routes
 router.get("/", getAllSupportCampaigns);
-router.get("/:id", getSupportCampaignById);
+router.get("/:id", getSupportCampaign);
 router.post("/", uploadFields, createSupportCampaign);
 router.put("/:id", uploadFields, updateSupportCampaign);
 router.delete("/:id", deleteSupportCampaign);

@@ -42,24 +42,21 @@ const createCurrentCampaign = async (req, res) => {
       missingFields.push("Campaign Image");
     }
 
-    if (!req.files?.detailsImage) {
-      missingFields.push("Details Image");
-    }
-
     if (missingFields.length > 0) {
       return res.status(400).json({
         message: "Missing required fields",
         missingFields
       });
     }
-
-    // Parse and validate details
-    const details = req.body.details ? JSON.parse(req.body.details) : null;
-    if (!details?.title || !details?.titleAr || !details?.description1 || 
-        !details?.description1Ar || !details?.description2 || !details?.description2Ar) {
-      return res.status(400).json({
-        message: "Missing required details fields"
-      });
+    
+    // Parse donationLinks if provided
+    let donationLinks = [];
+    if (req.body.donationLinks) {
+      try {
+        donationLinks = JSON.parse(req.body.donationLinks);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid donationLinks format" });
+      }
     }
 
     const campaignData = {
@@ -70,10 +67,7 @@ const createCurrentCampaign = async (req, res) => {
       descriptionAr: req.body.descriptionAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
-      details: {
-        ...details,
-        image: req.files.detailsImage[0].filename
-      }
+      donationLinks: donationLinks
     };
 
     const campaign = new CurrentCampaign(campaignData);
@@ -106,18 +100,13 @@ const updateCurrentCampaign = async (req, res) => {
     if (req.files?.image) {
       updateData.image = req.files.image[0].filename;
     }
-
-    // Update details if provided
-    if (req.body.details) {
-      const details = JSON.parse(req.body.details);
-      updateData.details = {
-        ...existingCampaign.details,
-        ...details
-      };
-      
-      // Update details image if provided
-      if (req.files?.detailsImage) {
-        updateData.details.image = req.files.detailsImage[0].filename;
+    
+    // Update donationLinks if provided
+    if (req.body.donationLinks) {
+      try {
+        updateData.donationLinks = JSON.parse(req.body.donationLinks);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid donationLinks format" });
       }
     }
 

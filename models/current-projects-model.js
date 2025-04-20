@@ -30,36 +30,22 @@ const currentProjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    details: {
-      image: {
-        type: String,
-        required: true,
-      },
-      title: {
-        type: String,
-        required: true,
-      },
-      titleAr: {
-        type: String,
-        required: true,
-      },
-      description1: {
-        type: String,
-        required: true,
-      },
-      description1Ar: {
-        type: String,
-        required: true,
-      },
-      description2: {
-        type: String,
-        required: true,
-      },
-      description2Ar: {
-        type: String,
-        required: true,
-      },
-    },
+    donationLinks: [
+      {
+        icon: {
+          type: String,
+          required: false
+        },
+        methodName: {
+          type: String,
+          required: true
+        },
+        link: {
+          type: String,
+          required: true
+        }
+      }
+    ]
   },
   {
     timestamps: true,

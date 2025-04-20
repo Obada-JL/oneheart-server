@@ -64,8 +64,29 @@ app.use(express.urlencoded({ extended: true, parameterLimit: 50000 }));
 
 // Add this line to see incoming requests
 app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
   console.log("Request Body:", req.body);
+  console.log("Request Files:", req.files);
   next();
+});
+
+// Ensure uploads directories exist
+const dirs = [
+  path.join(__dirname, 'uploads'),
+  path.join(__dirname, 'uploads/sliderImages'),
+  path.join(__dirname, 'uploads/counterImages'),
+  path.join(__dirname, 'uploads/aboutUs'),
+  path.join(__dirname, 'uploads/programs'),
+  path.join(__dirname, 'uploads/documentations')
+];
+
+dirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    console.log(`Creating directory: ${dir}`);
+    fs.mkdirSync(dir, { recursive: true });
+  } else {
+    console.log(`Directory exists: ${dir}`);
+  }
 });
 
 // Update the validation middleware to only run on POST and PUT requests

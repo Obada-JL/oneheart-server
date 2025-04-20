@@ -37,22 +37,49 @@ const addSponsorshipItem = async (req, res) => {
       });
     }
     
-    // Parse details
-    let details;
-    try {
-      details = typeof req.body.details === 'string' 
-        ? JSON.parse(req.body.details) 
-        : req.body.details;
-      
-      console.log("Parsed details:", details);
-    } catch (error) {
-      console.error("Error parsing details:", error);
-      return res.status(400).json({ 
-        message: "Invalid details format",
-        error: error.message
-      });
+    // Parse donationLinks if provided
+    let donationLinks = [];
+    if (req.body.donationLinks) {
+      try {
+        donationLinks = JSON.parse(req.body.donationLinks);
+        console.log("Parsed donationLinks:", donationLinks);
+        
+        // Process icon files from separate fields in req.files
+        if (req.files) {
+          // First, check if any donation links have iconField references
+          donationLinks.forEach((link, index) => {
+            if (link.iconField && req.files[link.iconField]) {
+              // Update the icon field with the filename
+              donationLinks[index].icon = req.files[link.iconField][0].filename;
+              // Remove the temporary iconField property as it's no longer needed
+              delete donationLinks[index].iconField;
+              console.log(`Updated donation link ${index} icon to: ${donationLinks[index].icon}`);
+            }
+          });
+          
+          // Also handle the older way of matching by field name pattern
+          Object.keys(req.files).forEach(key => {
+            // Check if the key follows the pattern 'donationLinkIcon_X'
+            const iconMatch = key.match(/^donationLinkIcon_(\d+)$/);
+            if (iconMatch && iconMatch[1]) {
+              const linkIndex = parseInt(iconMatch[1]);
+              if (donationLinks[linkIndex] && req.files[key][0]) {
+                // Update the icon field with the filename
+                donationLinks[linkIndex].icon = req.files[key][0].filename;
+                console.log(`Updated donation link ${linkIndex} icon to: ${donationLinks[linkIndex].icon}`);
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing donationLinks:", error);
+        return res.status(400).json({ 
+          message: "Invalid donationLinks format",
+          error: error.message
+        });
+      }
     }
-
+    
     const sponsorshipData = {
       title: req.body.title,
       titleAr: req.body.titleAr,
@@ -62,7 +89,7 @@ const addSponsorshipItem = async (req, res) => {
       categoryAr: req.body.categoryAr,
       total: req.body.total,
       remaining: req.body.remaining,
-      details: details
+      donationLinks: donationLinks
     };
 
     // Handle main image
@@ -71,14 +98,6 @@ const addSponsorshipItem = async (req, res) => {
       console.log("Main image will be saved:", req.files.sponsorshipImage[0].filename);
     } else {
       console.log("No main image provided");
-    }
-
-    // Handle details image
-    if (req.files && req.files.detailsImage) {
-      sponsorshipData.detailsImage = req.files.detailsImage[0].filename;
-      console.log("Details image will be saved:", req.files.detailsImage[0].filename);
-    } else {
-      console.log("No details image provided");
     }
 
     console.log("Creating sponsorship with data:", sponsorshipData);
@@ -111,20 +130,47 @@ const updateSponsorshipItem = async (req, res) => {
       return res.status(404).json({ message: "Sponsorship item not found" });
     }
     
-    // Parse details
-    let details;
-    try {
-      details = typeof req.body.details === 'string' 
-        ? JSON.parse(req.body.details) 
-        : req.body.details;
-      
-      console.log("Parsed details:", details);
-    } catch (error) {
-      console.error("Error parsing details:", error);
-      return res.status(400).json({ 
-        message: "Invalid details format",
-        error: error.message
-      });
+    // Parse donationLinks if provided
+    let donationLinks = existingSponsorship.donationLinks || [];
+    if (req.body.donationLinks) {
+      try {
+        donationLinks = JSON.parse(req.body.donationLinks);
+        console.log("Parsed donationLinks for update:", donationLinks);
+        
+        // Process icon files from separate fields in req.files
+        if (req.files) {
+          // First, check if any donation links have iconField references
+          donationLinks.forEach((link, index) => {
+            if (link.iconField && req.files[link.iconField]) {
+              // Update the icon field with the filename
+              donationLinks[index].icon = req.files[link.iconField][0].filename;
+              // Remove the temporary iconField property as it's no longer needed
+              delete donationLinks[index].iconField;
+              console.log(`Updated donation link ${index} icon to: ${donationLinks[index].icon}`);
+            }
+          });
+          
+          // Also handle the older way of matching by field name pattern
+          Object.keys(req.files).forEach(key => {
+            // Check if the key follows the pattern 'donationLinkIcon_X'
+            const iconMatch = key.match(/^donationLinkIcon_(\d+)$/);
+            if (iconMatch && iconMatch[1]) {
+              const linkIndex = parseInt(iconMatch[1]);
+              if (donationLinks[linkIndex] && req.files[key][0]) {
+                // Update the icon field with the filename
+                donationLinks[linkIndex].icon = req.files[key][0].filename;
+                console.log(`Updated donation link ${linkIndex} icon to: ${donationLinks[linkIndex].icon}`);
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing donationLinks:", error);
+        return res.status(400).json({ 
+          message: "Invalid donationLinks format",
+          error: error.message
+        });
+      }
     }
     
     // Prepare update data
@@ -137,7 +183,7 @@ const updateSponsorshipItem = async (req, res) => {
       categoryAr: req.body.categoryAr || existingSponsorship.categoryAr,
       total: req.body.total || existingSponsorship.total,
       remaining: req.body.remaining || existingSponsorship.remaining,
-      details: details || existingSponsorship.details
+      donationLinks: donationLinks
     };
     
     console.log("Update data prepared:", updateData);
@@ -146,12 +192,6 @@ const updateSponsorshipItem = async (req, res) => {
     if (req.files && req.files.sponsorshipImage) {
       updateData.sponsorshipImage = req.files.sponsorshipImage[0].filename;
       console.log("New main image will be saved:", req.files.sponsorshipImage[0].filename);
-    }
-
-    // Handle details image
-    if (req.files && req.files.detailsImage) {
-      updateData.detailsImage = req.files.detailsImage[0].filename;
-      console.log("New details image will be saved:", req.files.detailsImage[0].filename);
     }
 
     const updatedSponsorship = await Sponsorship.findByIdAndUpdate(

@@ -15,7 +15,11 @@ const {
 // Configure multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = "uploads/support-projects";
+    // Determine the appropriate upload directory based on field name
+    const uploadDir = file.fieldname.startsWith('donationIcon_')
+      ? "uploads/payment-icons"
+      : "uploads/support-projects";
+    
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -34,18 +38,12 @@ router.get("/", getAllSupportProjects);
 router.get("/:id", getSupportProjectById);
 router.post(
   "/",
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "detailsImage", maxCount: 1 },
-  ]),
+  upload.any(), // Accept any files and let controller handle them
   createSupportProject
 );
 router.put(
   "/:id",
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "detailsImage", maxCount: 1 },
-  ]),
+  upload.any(), // Accept any files and let controller handle them
   updateSupportProject
 );
 router.delete("/:id", deleteSupportProject);

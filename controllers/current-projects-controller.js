@@ -27,18 +27,20 @@ const getCurrentProjectById = async (req, res) => {
 const createCurrentProject = async (req, res) => {
   try {
     // Check for required files
-    if (!req.files?.image || !req.files?.detailsImage) {
+    if (!req.files?.image) {
       return res
         .status(400)
-        .json({ message: "Both main image and details image are required" });
+        .json({ message: "Project image is required" });
     }
-
-    // Parse details from the request body
-    let details;
-    try {
-      details = JSON.parse(req.body.details);
-    } catch (error) {
-      return res.status(400).json({ message: "Invalid details format" });
+    
+    // Parse donationLinks if provided
+    let donationLinks = [];
+    if (req.body.donationLinks) {
+      try {
+        donationLinks = JSON.parse(req.body.donationLinks);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid donationLinks format" });
+      }
     }
 
     const projectData = {
@@ -49,15 +51,7 @@ const createCurrentProject = async (req, res) => {
       descriptionAr: req.body.descriptionAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
-      details: {
-        image: req.files.detailsImage[0].filename,
-        title: details.title,
-        titleAr: details.titleAr,
-        description1: details.description1,
-        description1Ar: details.description1Ar,
-        description2: details.description2,
-        description2Ar: details.description2Ar,
-      },
+      donationLinks: donationLinks
     };
 
     const project = new CurrentProject(projectData);
@@ -88,22 +82,17 @@ const updateCurrentProject = async (req, res) => {
       categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };
 
-    // Update main image if provided
+    // Update image if provided
     if (req.files?.image) {
       updateData.image = req.files.image[0].filename;
     }
-
-    // Handle details update
-    if (req.body.details) {
-      const details = JSON.parse(req.body.details);
-      updateData.details = {
-        ...existingProject.details,
-        ...details,
-      };
-
-      // Update details image if provided
-      if (req.files?.detailsImage) {
-        updateData.details.image = req.files.detailsImage[0].filename;
+    
+    // Update donationLinks if provided
+    if (req.body.donationLinks) {
+      try {
+        updateData.donationLinks = JSON.parse(req.body.donationLinks);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid donationLinks format" });
       }
     }
 

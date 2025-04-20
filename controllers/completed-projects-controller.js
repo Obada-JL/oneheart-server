@@ -1,4 +1,6 @@
 const CompletedProject = require("../models/completed-projects-model");
+const path = require("path");
+const fs = require("fs");
 
 // Get all completed projects
 const getAllCompletedProjects = async (req, res) => {
@@ -15,11 +17,20 @@ const createCompletedProject = async (req, res) => {
   try {
     console.log("Received data:", {
       body: req.body,
-      file: req.file,
+      files: req.files,
     });
 
+    // Find the main image file
+    const mainImage = req.files && req.files.find(file => file.fieldname === 'image');
+    if (!mainImage) {
+      return res.status(400).json({
+        message: "Missing required image file",
+        received: req.files?.map(f => f.fieldname) || [],
+      });
+    }
+
     // Validate required fields
-    if (!req.body.title || !req.body.titleAr || !req.body.category || !req.body.categoryAr || !req.file) {
+    if (!req.body.title || !req.body.titleAr || !req.body.category || !req.body.categoryAr) {
       return res.status(400).json({
         message: "Missing required fields",
         required: ["title", "titleAr", "category", "categoryAr", "image"],
@@ -57,12 +68,52 @@ const createCompletedProject = async (req, res) => {
       });
     }
 
+    // Parse donation links if provided
+    let donationLinks = [];
+    if (req.body.donationLinks) {
+      try {
+        donationLinks = JSON.parse(req.body.donationLinks);
+        console.log("Parsed donationLinks:", donationLinks);
+        
+        // Process donation icon files if they exist
+        if (req.files && req.files.length > 0) {
+          // Find all donation icon files
+          const donationIconFiles = req.files.filter(file => 
+            file.fieldname.startsWith('donationIcon_')
+          );
+          
+          // If we have donation icon files, update the links with the filenames
+          if (donationIconFiles.length > 0) {
+            donationLinks = donationLinks.map(link => {
+              // If this link has an iconIndex, find the matching file
+              if (link.iconIndex !== undefined) {
+                const iconFile = donationIconFiles.find(file => 
+                  file.fieldname === `donationIcon_${link.iconIndex}`
+                );
+                
+                if (iconFile) {
+                  // Replace iconIndex with the actual filename
+                  delete link.iconIndex;
+                  link.icon = iconFile.filename;
+                }
+              }
+              return link;
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing donationLinks:", error);
+        return res.status(400).json({ message: "Invalid donationLinks format" });
+      }
+    }
+
     const projectData = {
-      image: req.file.filename,
+      image: mainImage.filename,
       title: req.body.title,
       titleAr: req.body.titleAr,
       category: req.body.category,
       categoryAr: req.body.categoryAr,
+      donationLinks: donationLinks,
       details: details.map((detail) => ({
         fund: detail.fund,
         fundAr: detail.fundAr,
@@ -86,7 +137,7 @@ const createCompletedProject = async (req, res) => {
     console.error("Error in createCompletedProject:", error);
     res.status(400).json({
       message: error.message,
-      receivedData: { body: req.body, file: req.file },
+      receivedData: { body: req.body, files: req.files },
     });
   }
 };
@@ -94,6 +145,11 @@ const createCompletedProject = async (req, res) => {
 // Update completed project
 const updateCompletedProject = async (req, res) => {
   try {
+    console.log("Update Received data:", {
+      body: req.body,
+      files: req.files,
+    });
+
     const existingProject = await CompletedProject.findById(req.params.id);
     if (!existingProject) {
       return res.status(404).json({ message: "Project not found" });
@@ -106,16 +162,59 @@ const updateCompletedProject = async (req, res) => {
       categoryAr: req.body.categoryAr || existingProject.categoryAr,
     };
 
-    if (req.file) {
-      updateData.image = req.file.filename;
+    // Find the main image file if provided
+    const mainImage = req.files && req.files.find(file => file.fieldname === 'image');
+    if (mainImage) {
+      updateData.image = mainImage.filename;
     }
 
+    // Parse details data if provided
     if (req.body.details) {
       try {
         const details = JSON.parse(req.body.details);
         updateData.details = details;
       } catch (error) {
         return res.status(400).json({ message: "Invalid details format" });
+      }
+    }
+
+    // Parse donation links if provided
+    if (req.body.donationLinks) {
+      try {
+        let updatedDonationLinks = JSON.parse(req.body.donationLinks);
+        console.log("Parsed donationLinks for update:", updatedDonationLinks);
+        
+        // Process donation icon files if they exist
+        if (req.files && req.files.length > 0) {
+          // Find all donation icon files
+          const donationIconFiles = req.files.filter(file => 
+            file.fieldname.startsWith('donationIcon_')
+          );
+          
+          // If we have donation icon files, update the links with the filenames
+          if (donationIconFiles.length > 0) {
+            updatedDonationLinks = updatedDonationLinks.map(link => {
+              // If this link has an iconIndex, find the matching file
+              if (link.iconIndex !== undefined) {
+                const iconFile = donationIconFiles.find(file => 
+                  file.fieldname === `donationIcon_${link.iconIndex}`
+                );
+                
+                if (iconFile) {
+                  // Replace iconIndex with the actual filename
+                  delete link.iconIndex;
+                  link.icon = iconFile.filename;
+                }
+              }
+              return link;
+            });
+          }
+        }
+        
+        updateData.donationLinks = updatedDonationLinks;
+      } catch (error) {
+        console.error("Error parsing donationLinks:", error);
+        return res.status(400).json({ message: "Invalid donationLinks format" });
       }
     }
 
@@ -130,7 +229,7 @@ const updateCompletedProject = async (req, res) => {
     console.error("Update error:", error);
     res.status(400).json({
       message: error.message,
-      receivedData: { body: req.body, file: req.file },
+      receivedData: { body: req.body, files: req.files },
     });
   }
 };

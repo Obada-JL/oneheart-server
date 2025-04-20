@@ -14,6 +14,14 @@ const completedCampaignSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    description: {
+      type: String,
+      required: true,
+    },
+    descriptionAr: {
+      type: String,
+      required: true,
+    },
     category: {
       type: String,
       required: true,
@@ -21,6 +29,18 @@ const completedCampaignSchema = new mongoose.Schema(
     categoryAr: {
       type: String,
       required: true,
+    },
+    total: {
+      type: Number,
+      required: true,
+    },
+    paid: {
+      type: Number,
+      required: true,
+    },
+    donationLinks: {
+      type: String,
+      default: "[]"
     },
     details: [
       {

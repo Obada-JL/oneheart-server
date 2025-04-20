@@ -9,14 +9,21 @@ const {
   deleteSponsorshipItem,
 } = require("../controllers/Sponsorships-controller");
 
-// Configure multer
+// Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = "uploads/sponsorships";
+    let uploadDir = "uploads/sponsorships";
+    
+    // Use different directory for payment icons
+    if (file.fieldname.startsWith('donationLinkIcon_')) {
+      uploadDir = "uploads/payment-icons";
+    }
+    
     // Ensure directory exists
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+    
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -33,6 +40,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Use multer's .any() method to handle dynamic field names for donation link icons
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -40,12 +48,6 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
 });
-
-// Configure upload for multiple fields
-const uploadFields = upload.fields([
-  { name: 'sponsorshipImage', maxCount: 1 },
-  { name: 'detailsImage', maxCount: 1 }
-]);
 
 // Add error handling middleware
 router.use((error, req, res, next) => {
@@ -60,8 +62,8 @@ router.use((error, req, res, next) => {
 
 // Routes
 router.get("/", getSponsorshipItems);
-router.post("/", uploadFields, addSponsorshipItem);
-router.put("/:id", uploadFields, updateSponsorshipItem);
+router.post("/", upload.any(), addSponsorshipItem);
+router.put("/:id", upload.any(), updateSponsorshipItem);
 router.delete("/:id", deleteSponsorshipItem);
 
 module.exports = router;
